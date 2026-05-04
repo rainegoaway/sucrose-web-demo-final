@@ -58,6 +58,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/personnel', [UserController::class, 'store'])->name('personnel.store');
     Route::patch('/personnel/{id}', [UserController::class, 'update'])->name('personnel.update');
     Route::patch('/personnel/{id}/deactivate', [UserController::class, 'deactivate'])->name('personnel.deactivate');
+    Route::post('/personnel/{id}/reset-password', [UserController::class, 'resetPassword'])->name('personnel.reset-password');
+    Route::delete('/personnel/{id}', [UserController::class, 'destroy'])->name('personnel.destroy');
 
     Route::get('/anomaly', function () {
         return Inertia::render('Anomaly/Index');

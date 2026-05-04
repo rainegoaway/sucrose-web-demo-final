@@ -31,7 +31,13 @@ export default function Index({ users }) {
 
     const [showAdd, setShowAdd] = useState(false);
     const [showEdit, setShowEdit] = useState(false);
+    const [showView, setShowView] = useState(false);
+    const [showDelete, setShowDelete] = useState(false);
+    const [showReset, setShowReset] = useState(false);
     const [selected, setSelected] = useState(null);
+    const [tempPassword, setTempPassword] = useState(null);
+
+    const deleteForm = useForm({});
 
     const form = useForm({
         first_name: "",
@@ -95,6 +101,38 @@ export default function Index({ users }) {
         setSelected(null);
     };
 
+    const openView = (u) => {
+        setSelected(u);
+        setShowView(true);
+    };
+
+    const closeView = () => {
+        setSelected(null);
+        setShowView(false);
+    };
+
+    const openDelete = (u) => {
+        setSelected(u);
+        setShowDelete(true);
+    };
+
+    const closeDelete = () => {
+        setSelected(null);
+        setShowDelete(false);
+    };
+
+    const openReset = (u) => {
+        setSelected(u);
+        setTempPassword(null);
+        setShowReset(true);
+    };
+
+    const closeReset = () => {
+        setSelected(null);
+        setTempPassword(null);
+        setShowReset(false);
+    };
+
     const submitAdd = (e) => {
         e.preventDefault();
         form.post("/personnel", {
@@ -113,6 +151,59 @@ export default function Index({ users }) {
                 setSelected(null);
             },
         });
+    };
+
+    const submitDelete = () => {
+        if (!selected?.user_id) return;
+        deleteForm.delete(`/personnel/${selected.user_id}`, {
+            onSuccess: () => {
+                closeDelete();
+                window.location.reload();
+            },
+        });
+    };
+
+
+    const resetPassword = async () => {
+        if (!selected?.user_id) return;
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const res = await fetch(`/personnel/${selected.user_id}/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) throw new Error('Failed');
+            const json = await res.json();
+            setTempPassword(json.temporary_password || json.temporaryPassword || null);
+        } catch (err) {
+            console.error('Password reset failed', err);
+        }
+    };
+
+    const setUserInactive = async () => {
+        if (!selected?.user_id) return;
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const res = await fetch(`/personnel/${selected.user_id}/deactivate`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) throw new Error('Failed to deactivate');
+            closeDelete();
+            window.location.reload();
+        } catch (err) {
+            console.error('Set inactive failed', err);
+        }
     };
 
     return (
@@ -238,10 +329,31 @@ export default function Index({ users }) {
                                     <div className="flex items-center gap-1">
                                         <button
                                             type="button"
+                                            onClick={() => openView(u)}
+                                            className="rounded border border-stone-200 bg-white px-2 py-1 text-xs text-stone-600 hover:bg-sky-50 hover:text-sky-800"
+                                        >
+                                            View
+                                        </button>
+                                        <button
+                                            type="button"
                                             onClick={() => openEdit(u)}
                                             className="rounded border border-stone-200 bg-white px-2 py-1 text-xs text-stone-600 hover:bg-amber-50 hover:text-amber-800"
                                         >
                                             Edit
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => openDelete(u)}
+                                            className="rounded border border-stone-200 bg-white px-2 py-1 text-xs text-stone-600 hover:bg-red-50 hover:text-red-800"
+                                        >
+                                            Delete
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { openReset(u); resetPassword(); }}
+                                            className="rounded border border-stone-200 bg-white px-2 py-1 text-xs text-stone-600 hover:bg-violet-50 hover:text-violet-800"
+                                        >
+                                            Reset Password
                                         </button>
                                     </div>
                                 </td>
@@ -475,6 +587,105 @@ export default function Index({ users }) {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {showView && selected && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-5" role="dialog" aria-modal="true" onClick={(e)=>{ if(e.target===e.currentTarget) closeView(); }}>
+                    <div className="w-full max-w-lg rounded-lg bg-white shadow-xl">
+                        <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+                            <div className="text-sm font-semibold">Personnel Details</div>
+                            <button type="button" onClick={closeView} className="rounded-md px-2 py-1 text-stone-400 hover:bg-stone-50 hover:text-stone-600">✕</button>
+                        </div>
+                        <div className="p-5">
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                <div>
+                                    <div className="text-[11px] font-medium uppercase tracking-widest text-stone-400">Name</div>
+                                    <div className="mt-1 text-sm">{selected.last_name}, {selected.first_name}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[11px] font-medium uppercase tracking-widest text-stone-400">Role</div>
+                                    <div className="mt-1 text-sm">{roleLabel(selected.role)}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[11px] font-medium uppercase tracking-widest text-stone-400">Email</div>
+                                    <div className="mt-1 text-sm">{selected.email}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[11px] font-medium uppercase tracking-widest text-stone-400">Assignment</div>
+                                    <div className="mt-1 text-sm">{selected.assignment}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[11px] font-medium uppercase tracking-widest text-stone-400">Status</div>
+                                    <div className="mt-1 text-sm">{selected.is_active ? 'Active' : 'Inactive'}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[11px] font-medium uppercase tracking-widest text-stone-400">Monitoring Records</div>
+                                    <div className="mt-1 text-sm">{selected.has_monitoring_records ? 'Yes' : 'No'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-end gap-2 border-t border-stone-200 px-5 py-4">
+                            <button type="button" onClick={closeView} className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-600 hover:bg-stone-50">Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showDelete && selected && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-5" role="dialog" aria-modal="true" onClick={(e)=>{ if(e.target===e.currentTarget) closeDelete(); }}>
+                    {selected.has_monitoring_records ? (
+                        <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+                            <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+                                <div className="text-sm font-semibold">Deletion Not Allowed</div>
+                                <button type="button" onClick={closeDelete} className="rounded-md px-2 py-1 text-stone-400 hover:bg-stone-50 hover:text-stone-600">✕</button>
+                            </div>
+                            <div className="p-5 text-center">
+                                <div className="text-3xl">⚠️</div>
+                                <div className="mt-3 text-sm text-stone-600"><strong>{selected.last_name}, {selected.first_name}</strong> cannot be deleted because they are attached to active monitoring records.</div>
+                                <div className="mt-2 text-xs text-stone-400">Please set the personnel to Inactive instead.</div>
+                            </div>
+                            <div className="flex items-center justify-end gap-2 border-t border-stone-200 px-5 py-4">
+                                <button type="button" onClick={closeDelete} className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-600 hover:bg-stone-50">Cancel</button>
+                                <button type="button" onClick={setUserInactive} disabled={deleteForm.processing} className="rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50">Set to Inactive</button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+                            <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+                                <div className="text-sm font-semibold">Confirm Deletion</div>
+                                <button type="button" onClick={closeDelete} className="rounded-md px-2 py-1 text-stone-400 hover:bg-stone-50 hover:text-stone-600">✕</button>
+                            </div>
+                            <div className="p-5 text-center">
+                                <div className="text-3xl">🗑</div>
+                                <div className="mt-3 text-sm text-stone-600">Delete <strong>{selected.last_name}, {selected.first_name}</strong>?</div>
+                                <div className="mt-1 text-xs text-stone-400">This action cannot be undone.</div>
+                            </div>
+                            <div className="flex items-center justify-end gap-2 border-t border-stone-200 px-5 py-4">
+                                <button type="button" onClick={closeDelete} className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-600 hover:bg-stone-50">Cancel</button>
+                                <button type="button" onClick={submitDelete} disabled={deleteForm.processing} className="rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50">Confirm Delete</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {showReset && selected && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-5" role="dialog" aria-modal="true" onClick={(e)=>{ if(e.target===e.currentTarget) closeReset(); }}>
+                    <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+                        <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+                            <div className="text-sm font-semibold">Password Reset</div>
+                            <button type="button" onClick={closeReset} className="rounded-md px-2 py-1 text-stone-400 hover:bg-stone-50 hover:text-stone-600">✕</button>
+                        </div>
+                        <div className="p-5 text-center">
+                            <div className="text-3xl">🔑</div>
+                            <div className="mt-3 text-sm text-stone-600">Temporary password for <strong>{selected.last_name}, {selected.first_name}</strong></div>
+                            <div className="mt-2 text-lg font-mono text-stone-800">{tempPassword || 'Generating...'}</div>
+                        </div>
+                        <div className="flex items-center justify-end gap-2 border-t border-stone-200 px-5 py-4">
+                            <button type="button" onClick={closeReset} className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-600 hover:bg-stone-50">Close</button>
+                        </div>
                     </div>
                 </div>
             )}

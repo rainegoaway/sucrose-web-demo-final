@@ -34,6 +34,8 @@ class UserController extends Controller
                     $assignment = $active->city->city_name;
                 }
 
+                $hasRecords = $user->assignments()->exists();
+
                 return [
                     'user_id' => $user->user_id,
                     'first_name' => $user->first_name,
@@ -42,6 +44,7 @@ class UserController extends Controller
                     'role' => $user->role,
                     'is_active' => (bool) $user->is_active,
                     'assignment' => $assignment,
+                    'has_monitoring_records' => $hasRecords,
                 ];
             });
 
@@ -159,9 +162,7 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         
-        $hasRecords = $user->assignments()
-            ->whereHas('marketRecords')
-            ->exists();
+        $hasRecords = $user->assignments()->exists();
 
         return response()->json([
             'has_monitoring_records' => $hasRecords
@@ -173,9 +174,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         // Check if user has monitoring records
-        $hasMonitoringRecords = $user->assignments()
-            ->whereHas('marketRecords')
-            ->exists();
+        $hasMonitoringRecords = $user->assignments()->exists();
 
         if ($hasMonitoringRecords) {
             if (request()->wantsJson()) {

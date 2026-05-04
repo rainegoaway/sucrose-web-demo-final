@@ -127,16 +127,20 @@ class MarketController extends Controller
     {
         $market = Market::findOrFail($id);
 
-        // Check for monitoring records - check if market has any brands assigned (indicating monitoring)
-        if ($market->brands()->exists()) {
+        // If linked to monitoring records (brands) or this is a prepopulated market,
+        // do not hard-delete: mark as inactive instead and inform the user.
+        if ($market->brands()->exists() || ($market->is_prepopulated ?? false)) {
+            $market->update(['is_active' => false]);
+
             if (request()->wantsJson() && !request()->header('X-Inertia')) {
                 return response()->json([
-                    'message' => 'Cannot delete market with associated monitoring records'
-                ], 409);
+                    'message' => 'Market is linked to monitoring records (or is prepopulated) and has been set to inactive'
+                ]);
             }
+
             return redirect()->route('markets.index')->with('flash', [
-                'message' => 'Cannot delete market with associated monitoring records',
-                'type' => 'error',
+                'message' => 'Market is linked to monitoring records (or is prepopulated) and has been set to Inactive',
+                'type' => 'success',
             ]);
         }
 

@@ -1292,47 +1292,101 @@ export default function Index({ markets, cities, brands }) {
                     )}
 
                     {modal === "delete" && selected && (
-                        <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
-                            <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
-                                <div className="text-sm font-semibold">
-                                    Confirm Deletion
+                        (() => {
+                            const hasMonitoring = (selected.brands && selected.brands.length > 0) || selected.is_prepopulated;
+
+                            const setInactive = () => {
+                                if (!selected?.market_id) return;
+                                deleteForm.clearErrors();
+                                deleteForm.patch(`/markets/${selected.market_id}`, {
+                                    data: { is_active: false },
+                                    onSuccess: () => {
+                                        closeModal();
+                                        router.reload();
+                                    },
+                                });
+                            };
+
+                            if (hasMonitoring) {
+                                return (
+                                    <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+                                        <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+                                            <div className="text-sm font-semibold">Deletion Not Allowed</div>
+                                            <button
+                                                type="button"
+                                                onClick={closeModal}
+                                                className="rounded-md px-2 py-1 text-stone-400 hover:bg-stone-50 hover:text-stone-600"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                        <div className="p-5 text-center">
+                                            <div className="text-3xl">⚠️</div>
+                                            <div className="mt-3 text-sm text-stone-600">
+                                                <strong>{selected.market_name}</strong> cannot be deleted because it is attached to active monitoring reports or is a prepopulated record.
+                                            </div>
+                                            <div className="mt-2 text-xs text-stone-400">
+                                                Please set the market to Inactive instead.
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-end gap-2 border-t border-stone-200 px-5 py-4">
+                                            <button
+                                                type="button"
+                                                onClick={closeModal}
+                                                className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-600 hover:bg-stone-50"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={setInactive}
+                                                disabled={deleteForm.processing}
+                                                className="rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+                                            >
+                                                Set to Inactive
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+                                    <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+                                        <div className="text-sm font-semibold">Confirm Deletion</div>
+                                        <button
+                                            type="button"
+                                            onClick={closeModal}
+                                            className="rounded-md px-2 py-1 text-stone-400 hover:bg-stone-50 hover:text-stone-600"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                    <div className="p-5 text-center">
+                                        <div className="text-3xl">🗑</div>
+                                        <div className="mt-3 text-sm text-stone-600">Delete <strong>{selected.market_name}</strong>?</div>
+                                        <div className="mt-1 text-xs text-stone-400">This action cannot be undone.</div>
+                                    </div>
+                                    <div className="flex items-center justify-end gap-2 border-t border-stone-200 px-5 py-4">
+                                        <button
+                                            type="button"
+                                            onClick={closeModal}
+                                            className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-600 hover:bg-stone-50"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={submitDelete}
+                                            disabled={deleteForm.processing}
+                                            className="rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50"
+                                        >
+                                            Confirm Delete
+                                        </button>
+                                    </div>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="rounded-md px-2 py-1 text-stone-400 hover:bg-stone-50 hover:text-stone-600"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                            <div className="p-5 text-center">
-                                <div className="text-3xl">🗑</div>
-                                <div className="mt-3 text-sm text-stone-600">
-                                    Delete{" "}
-                                    <strong>{selected.market_name}</strong>?
-                                </div>
-                                <div className="mt-1 text-xs text-stone-400">
-                                    This action cannot be undone.
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-end gap-2 border-t border-stone-200 px-5 py-4">
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-600 hover:bg-stone-50"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={submitDelete}
-                                    disabled={deleteForm.processing}
-                                    className="rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50"
-                                >
-                                    Confirm Delete
-                                </button>
-                            </div>
-                        </div>
+                            );
+                        })()
                     )}
                 </div>
             )}

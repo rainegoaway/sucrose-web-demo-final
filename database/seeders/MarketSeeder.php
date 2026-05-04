@@ -142,6 +142,7 @@ class MarketSeeder extends Seeder
                     'longitude' => $market['lon'],
                     'market_type' => $market['type'],
                     'is_active' => true,
+                    'is_prepopulated' => true,
                 ]);
             }
         }

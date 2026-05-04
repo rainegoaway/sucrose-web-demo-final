@@ -21,6 +21,7 @@ class Market extends Model
         'market_type',
         'monitoring_status',
         'is_active',
+        'is_prepopulated',
     ];
 
     protected static function boot()
