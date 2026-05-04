@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUCROSE — Sugar Price Monitoring System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F4F0;
+    --surface: #FFFFFF;
+    --surface2: #F0EFE9;
+    --border: #E2E0D8;
+    --border2: #D0CEC4;
+    --text: #1A1916;
+    --text2: #5C5A52;
+    --text3: #9B9889;
+    --accent: #1A6B3C;
+    --accent-light: #E6F2EC;
+    --accent2: #2D8A52;
+    --danger: #B83232;
+    --danger-light: #FAEAEA;
+    --warn: #A05C00;
+    --warn-light: #FFF3E0;
+    --info: #1D4E89;
+    --info-light: #E8F0FA;
+    --radius: 8px;
+    --radius-sm: 5px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+    --nav-width: 220px;
+    --nav-width-collapsed: 58px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13.5px;
+    line-height: 1.5;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ── LAYOUT ── */
+  #app { display: flex; height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--nav-width);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.25s ease;
+    flex-shrink: 0;
+    overflow: hidden;
+    z-index: 10;
+  }
+  #sidebar.collapsed { width: var(--nav-width-collapsed); }
+
+  .sidebar-brand {
+    padding: 16px 14px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 56px;
+  }
+  .brand-icon {
+    width: 30px; height: 30px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px; font-weight: 700; color: white; letter-spacing: -0.5px;
+  }
+  .brand-text { overflow: hidden; white-space: nowrap; }
+  .brand-name { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.02em; }
+  .brand-sub { font-size: 10px; color: var(--text3); letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .sidebar-profile {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 9px;
+    cursor: pointer; transition: background 0.15s;
+    min-height: 52px;
+  }
+  .sidebar-profile:hover { background: var(--surface2); }
+  .profile-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent-light);
+    border: 1.5px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--accent);
+    flex-shrink: 0;
+  }
+  .profile-info { overflow: hidden; }
+  .profile-name { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-role { font-size: 10.5px; color: var(--text3); white-space: nowrap; }
+
+  .sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+
+  .nav-section-label {
+    font-size: 9.5px; font-weight: 600; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 12px 14px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  #sidebar.collapsed .nav-section-label { opacity: 0; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 14px;
+    cursor: pointer;
+    border-radius: 0;
+    transition: background 0.12s;
+    white-space: nowrap;
+    position: relative;
+    color: var(--text2);
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .nav-item.active::before {
+    content: '';
+    position: absolute; left: 0; top: 4px; bottom: 4px;
+    width: 3px; background: var(--accent);
+    border-radius: 0 2px 2px 0;
+  }
+  .nav-icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+  .nav-label { font-size: 13px; overflow: hidden; }
+
+  .sidebar-toggle {
+    border-top: 1px solid var(--border);
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 9px;
+    color: var(--text3);
+    transition: background 0.12s;
+    font-size: 12px;
+  }
+  .sidebar-toggle:hover { background: var(--surface2); color: var(--text2); }
+
+  /* ── MAIN ── */
+  #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .topbar-breadcrumb { font-size: 12px; color: var(--text3); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+  /* ── PAGE CONTENT ── */
+  .page-content { flex: 1; overflow-y: auto; padding: 20px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .card-header {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* ── TABLE TOOLBAR ── */
+  .table-toolbar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 300px; }
+  .search-wrap input {
+    width: 100%;
+    padding: 7px 10px 7px 32px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-wrap input:focus { border-color: var(--accent2); }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; }
+  
+  select.filter-select {
+    padding: 7px 28px 7px 10px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 13px;
+    background: var(--surface);
+    color: var(--text2);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239B9889'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    min-width: 120px;
+  }
+  select.filter-select:focus { border-color: var(--accent2); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 13px;
+    border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; outline: none;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-danger { background: var(--danger-light); color: var(--danger); border: 1px solid #f0c0c0; }
+  .btn-danger:hover { background: #f5d5d5; }
+  .btn-sm { padding: 4px 9px; font-size: 12px; }
+  .btn-icon { padding: 5px 7px; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 9px 14px;
+    text-align: left;
+    font-size: 11.5px; font-weight: 600; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    user-select: none;
+  }
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px; color: var(--text);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #FAFAF8; }
+
+  .table-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+  .table-count { font-size: 12px; color: var(--text3); }
+
+  /* ── PAGINATION ── */
+  .pagination { display: flex; align-items: center; gap: 3px; }
+  .page-btn {
+    padding: 4px 9px; border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); font-size: 12.5px;
+    cursor: pointer; background: var(--surface); color: var(--text2);
+    transition: all 0.12s;
+  }
+  .page-btn:hover { background: var(--surface2); }
+  .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-active { background: var(--accent-light); color: var(--accent); }
+  .badge-inactive { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+  .badge-admin { background: #EEF2FF; color: #3730A3; }
+  .badge-officer { background: #FEF3C7; color: #92400E; }
+  .badge-monitoring { background: #E0F2FE; color: #075985; }
+  .badge-consolidation { background: #F0FDF4; color: #14532D; }
+  .badge-wet { background: #EDE9FE; color: #5B21B6; }
+  .badge-dry { background: #FFF7ED; color: #9A3412; }
+
+  /* ── ACTION BTNS ── */
+  .actions-cell { display: flex; align-items: center; gap: 4px; }
+  .action-btn {
+    padding: 4px 7px; border: 1px solid var(--border);
+    border-radius: 4px; cursor: pointer;
+    background: var(--surface); font-size: 12px;
+    color: var(--text2); transition: all 0.12s;
+    font-family: inherit;
+  }
+  .action-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+  .action-btn.view:hover { background: var(--info-light); color: var(--info); border-color: #bcd1f0; }
+  .action-btn.edit:hover { background: var(--warn-light); color: var(--warn); border-color: #f5d5a0; }
+  .action-btn.delete:hover { background: var(--danger-light); color: var(--danger); border-color: #f0c0c0; }
+  .action-btn.reset:hover { background: #F0FDF4; color: #166534; border-color: #bbf7d0; }
+
+  /* ── PLACEHOLDER PAGES ── */
+  .placeholder-page {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; min-height: 400px;
+    flex-direction: column; gap: 12px;
+    color: var(--text3);
+  }
+  .placeholder-icon { font-size: 48px; opacity: 0.4; }
+  .placeholder-title { font-size: 16px; font-weight: 500; color: var(--text2); }
+  .placeholder-sub { font-size: 13px; color: var(--text3); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.18s;
+    padding: 20px;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    width: 100%; max-width: 520px;
+    max-height: 90vh;
+    display: flex; flex-direction: column;
+    transform: translateY(8px); transition: transform 0.18s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal.modal-lg { max-width: 680px; }
+  .modal-header {
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .modal-close {
+    width: 26px; height: 26px; border-radius: 5px;
+    background: transparent; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text3);
+    transition: background 0.12s;
+  }
+  .modal-close:hover { background: var(--surface2); color: var(--text); }
+  .modal-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  }
+
+  /* ── FORM ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label.form-label { font-size: 12px; font-weight: 500; color: var(--text2); }
+  .form-input, .form-select, .form-textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 13px; color: var(--text);
+    background: var(--surface); outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent2); }
+  .form-input[disabled], .form-select[disabled] { background: var(--surface2); color: var(--text3); cursor: not-allowed; }
+  .form-hint { font-size: 11px; color: var(--text3); }
+
+  /* detail view */
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .detail-item { display: flex; flex-direction: column; gap: 3px; }
+  .detail-item.full { grid-column: 1/-1; }
+  .detail-label { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; }
+  .detail-value { font-size: 13.5px; color: var(--text); font-weight: 400; }
+
+  /* toast */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    background: var(--text); color: white;
+    padding: 10px 16px; border-radius: var(--radius);
+    font-size: 13px; box-shadow: var(--shadow-lg);
+    transform: translateY(60px); opacity: 0;
+    transition: all 0.25s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { background: var(--accent); }
+  #toast.error { background: var(--danger); }
+  #toast.warn { background: var(--warn); }
+
+  /* confirm dialog */
+  .confirm-body { display: flex; flex-direction: column; gap: 10px; }
+  .confirm-icon { font-size: 32px; text-align: center; }
+  .confirm-msg { font-size: 13.5px; color: var(--text2); text-align: center; line-height: 1.6; }
+
+  /* map placeholder */
+  .map-placeholder {
+    background: var(--surface2);
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius-sm);
+    height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 6px;
+    color: var(--text3); font-size: 12px; margin-top: 8px;
+  }
+
+  /* ── ANOMALY PAGE SPECIFICS ── */
+  .srp-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: var(--surface2);
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  .toggle-switch {
+    width: 40px; height: 22px; border-radius: 11px;
+    background: var(--border2); cursor: pointer; position: relative;
+    transition: background 0.2s; flex-shrink: 0;
+  }
+  .toggle-switch.on { background: var(--accent); }
+  .toggle-switch::after {
+    content: ''; position: absolute;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: white; top: 2px; left: 2px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-switch.on::after { left: 20px; }
+  .srp-inputs-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+  .srp-input-item label { font-size: 11.5px; font-weight: 500; color: var(--text2); display: block; margin-bottom: 4px; }
+
+  .stats-mini { display: flex; gap: 6px; }
+  .stat-chip {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 4px 10px;
+    font-size: 11.5px; color: var(--text2);
+  }
+  .stat-chip strong { color: var(--text); font-weight: 600; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+  /* pages hide */
+  .page { display: none; height: 100%; }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* password display */
+  .cred-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    color: var(--text); margin-top: 4px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  /* multi-select pills */
+  .multi-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 20px;
+    background: var(--accent-light); color: var(--accent);
+    font-size: 11.5px; font-weight: 500;
+    cursor: pointer;
+  }
+  .pill .pill-rm { font-size: 13px; opacity: 0.7; }
+  .pill .pill-rm:hover { opacity: 1; }
+
+  .anomaly-detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .anomaly-stat-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 12px;
+  }
+  .anomaly-stat-label { font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .anomaly-stat-val { font-size: 15px; font-weight: 600; color: var(--text); }
+  .anomaly-brand-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .anomaly-brand-table th { padding: 6px 10px; text-align: left; font-size: 10.5px; font-weight: 600; color: var(--text3); text-transform: uppercase; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .anomaly-brand-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+
+  /* volatility bar */
+  .vol-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .vol-bar { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .vol-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+  .vol-low { background: var(--accent); }
+  .vol-med { background: #D97706; }
+  .vol-high { background: var(--danger); }
+
+  /* SRP violation flag */
+  .flag-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 1px 6px; border-radius: 3px; font-size: 10.5px; font-weight: 600;
+  }
+  .flag-above { background: var(--danger-light); color: var(--danger); }
+  .flag-ok { background: var(--accent-light); color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════════════════════════════════ SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">SC</div>
+      <div class="brand-text">
+        <div class="brand-name">SUCROSE</div>
+        <div class="brand-sub">SRA · LMD</div>
+      </div>
+    </div>
+
+    <div class="sidebar-profile" onclick="showPage('profile')">
+      <div class="profile-avatar">JD</div>
+      <div class="profile-info">
+        <div class="profile-name">Juan Dela Cruz</div>
+        <div class="profile-role">Monitoring Admin</div>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <div class="nav-item" onclick="showPage('dashboard')">
+        <div class="nav-icon">⊞</div>
+        <div class="nav-label">Dashboard</div>
+      </div>
+      <div class="nav-item" onclick="showPage('map')">
+        <div class="nav-icon">🗺</div>
+        <div class="nav-label">City Map</div>
+      </div>
+
+      <div class="nav-section-label">Management</div>
+      <div class="nav-item active" id="nav-personnel" onclick="showPage('personnel')">
+        <div class="nav-icon">👥</div>
+        <div class="nav-label">Personnel</div>
+      </div>
+      <div class="nav-item" id="nav-market" onclick="showPage('market')">
+        <div class="nav-icon">🏪</div>
+        <div class="nav-label">Market</div>
+      </div>
+      <div class="nav-item" id="nav-brand" onclick="showPage('brand')">
+        <div class="nav-icon">🏷</div>
+        <div class="nav-label">Brand</div>
+      </div>
+      <div class="nav-item" id="nav-anomaly" onclick="showPage('anomaly')">
+        <div class="nav-icon">⚑</div>
+        <div class="nav-label">Anomaly</div>
+      </div>
+
+      <div class="nav-section-label">Reports</div>
+      <div class="nav-item" onclick="showPage('bantay')">
+        <div class="nav-icon">📋</div>
+        <div class="nav-label">Bantay Presyo</div>
+      </div>
+      <div class="nav-item" onclick="showPage('weekly')">
+        <div class="nav-icon">📅</div>
+        <div class="nav-label">Weekly Reports</div>
+      </div>
+      <div class="nav-item" onclick="showPage('forms')">
+        <div class="nav-icon">📝</div>
+        <div class="nav-label">Monitoring Forms</div>
+      </div>
+    </div>
+
+    <div class="sidebar-toggle" onclick="toggleSidebar()">
+      <div class="nav-icon" id="toggle-icon">◀</div>
+      <div class="nav-label">Collapse</div>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════ MAIN -->
+  <div id="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Personnel Management</div>
+        <div class="topbar-breadcrumb" id="topbar-breadcrumb">Management → Personnel</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="showToast('No new notifications','info')">🔔</button>
+        <button class="btn btn-ghost btn-sm">?</button>
+      </div>
+    </div>
+
+    <!-- ─── PERSONNEL PAGE ─── -->
+    <div id="page-personnel" class="page active">
+      <div class="page-content">
+        <div class="card">
+          <div class="card-header">
+            <div class="table-toolbar">
+              <div class="search-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" placeholder="Search by name…" id="p-search" oninput="filterPersonnel()">
+              </div>
+              <select class="filter-select" id="p-role" onchange="filterPersonnel()">
+                <option value="">All Roles</option>
+                <option>IT Admin</option>
+                <option>Monitoring Admin</option>
+                <option>Monitoring Officer</option>
+                <option>Consolidation Officer</option>
+              </select>
+              <select class="filter-select" id="p-status" onchange="filterPersonnel()">
+                <option value="">All Status</option>
+                <option>Active</option>
+                <option>Inactive</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('modal-add-personnel')">+ Add Personnel</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Last Name</th>
+                  <th>First Name</th>
+                  <th>Role</th>
+                  <th>Assignment</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="personnel-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <div class="table-count" id="p-count">Showing 5 out of 12 records</div>
+            <div class="pagination" id="p-pagination"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── MARKET PAGE ─── -->
+    <div id="page-market" class="page">
+      <div class="page-content">
+        <div class="card">
+          <div class="card-header">
+            <div class="table-toolbar">
+              <div class="search-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" placeholder="Search by market name…" id="m-search" oninput="filterMarket()">
+              </div>
+              <select class="filter-select" id="m-type" onchange="filterMarket()">
+                <option value="">All Types</option>
+                <option>Wet Market</option>
+                <option>Dry Market</option>
+              </select>
+              <select class="filter-select" id="m-city" onchange="filterMarket()">
+                <option value="">All Cities</option>
+                <option>Pasig City</option>
+                <option>Quezon City</option>
+                <option>Makati City</option>
+                <option>Marikina City</option>
+                <option>Manila City</option>
+              </select>
+              <select class="filter-select" id="m-status" onchange="filterMarket()">
+                <option value="">All Status</option>
+                <option>Active</option>
+                <option>Inactive</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('modal-add-market')">+ Add Market</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Market Name</th>
+                  <th>Type</th>
+                  <th>City</th>
+                  <th>Address</th>
+                  <th>Brands</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="market-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <div class="table-count" id="m-count">Showing 5 out of 10 records</div>
+            <div class="pagination" id="m-pagination"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── BRAND PAGE ─── -->
+    <div id="page-brand" class="page">
+      <div class="page-content">
+        <div class="card">
+          <div class="card-header">
+            <div class="table-toolbar">
+              <div class="search-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" placeholder="Search by brand name…" id="b-search" oninput="filterBrand()">
+              </div>
+              <select class="filter-select" id="b-sugar" onchange="filterBrand()">
+                <option value="">All Sugar Types</option>
+                <option>Raw</option>
+                <option>Washed</option>
+                <option>Refined</option>
+              </select>
+              <select class="filter-select" id="b-status" onchange="filterBrand()">
+                <option value="">All Status</option>
+                <option>Active</option>
+                <option>Inactive</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('modal-add-brand')">+ Add Brand</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Brand Name</th>
+                  <th>Sugar Types Available</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="brand-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <div class="table-count" id="b-count">Showing 5 out of 8 records</div>
+            <div class="pagination" id="b-pagination"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ANOMALY PAGE ─── -->
+    <div id="page-anomaly" class="page">
+      <div class="page-content" style="display:flex; flex-direction:column; gap:14px;">
+
+        <!-- SRP Flagging Card -->
+        <div class="card">
+          <div class="card-header" style="border-bottom:0; padding-bottom:0;">
+            <div style="font-size:13.5px; font-weight:600;">SRP Flagging</div>
+          </div>
+          <div style="padding:14px 16px;">
+            <div class="srp-toggle-row">
+              <div>
+                <div style="font-size:13px; font-weight:500;">Enable SRP Flagging</div>
+                <div style="font-size:11.5px; color:var(--text3); margin-top:2px;">Automatically flag prices that exceed the SRP threshold</div>
+              </div>
+              <div class="toggle-switch on" id="srp-toggle" onclick="toggleSRP()"></div>
+            </div>
+            <div id="srp-inputs">
+              <div style="font-size:12px; font-weight:500; color:var(--text2); margin-bottom:8px;">SRP Values &amp; Thresholds per Sugar Type</div>
+              <div class="srp-inputs-grid">
+                <div class="srp-input-item">
+                  <label>Raw Sugar (₱/kg)</label>
+                  <input class="form-input" type="number" value="55.00" step="0.5">
+                  <div style="font-size:11px; color:var(--text3); margin-top:3px;">Threshold: <input type="number" value="10" style="width:42px; border:1px solid var(--border2); border-radius:3px; padding:1px 4px; font-size:11px;">%</div>
+                </div>
+                <div class="srp-input-item">
+                  <label>Washed Sugar (₱/kg)</label>
+                  <input class="form-input" type="number" value="58.00" step="0.5">
+                  <div style="font-size:11px; color:var(--text3); margin-top:3px;">Threshold: <input type="number" value="10" style="width:42px; border:1px solid var(--border2); border-radius:3px; padding:1px 4px; font-size:11px;">%</div>
+                </div>
+                <div class="srp-input-item">
+                  <label>Refined Sugar (₱/kg)</label>
+                  <input class="form-input" type="number" value="68.00" step="0.5">
+                  <div style="font-size:11px; color:var(--text3); margin-top:3px;">Threshold: <input type="number" value="10" style="width:42px; border:1px solid var(--border2); border-radius:3px; padding:1px 4px; font-size:11px;">%</div>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="showToast('SRP settings saved','success')">Save SRP Settings</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anomaly Table -->
+        <div class="card">
+          <div class="card-header">
+            <div class="table-toolbar">
+              <div class="search-wrap">
+                <span class="search-icon">⌕</span>
+                <input type="text" placeholder="Search city or market…" id="a-search" oninput="filterAnomaly()">
+              </div>
+              <select class="filter-select" id="a-time" onchange="filterAnomaly()">
+                <option value="">All Time</option>
+                <option>Last Week</option>
+                <option>Last Quarter</option>
+                <option>Crop Year</option>
+              </select>
+              <select class="filter-select" id="a-city" onchange="filterAnomaly()">
+                <option value="">All Cities</option>
+                <option>Pasig City</option>
+                <option>Quezon City</option>
+                <option>Makati City</option>
+              </select>
+            </div>
+            <div class="stats-mini">
+              <div class="stat-chip"><strong>23</strong> Total Anomalies</div>
+              <div class="stat-chip"><strong>6</strong> Markets Flagged</div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>City</th>
+                  <th>Market Name</th>
+                  <th>Price Anomaly Count</th>
+                  <th>Market Anomaly Count</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="anomaly-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <div class="table-count" id="a-count">Showing 5 out of 8 records</div>
+            <div class="pagination" id="a-pagination"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PLACEHOLDER PAGES ─── -->
+    <div id="page-dashboard" class="page">
+      <div class="page-content" style="height:100%;"><div class="placeholder-page">
+        <div class="placeholder-icon">⊞</div>
+        <div class="placeholder-title">Dashboard</div>
+        <div class="placeholder-sub">Data visualization and summary charts — coming in Sprint 8</div>
+      </div></div>
+    </div>
+    <div id="page-map" class="page">
+      <div class="page-content" style="height:100%;"><div class="placeholder-page">
+        <div class="placeholder-icon">🗺</div>
+        <div class="placeholder-title">City Map</div>
+        <div class="placeholder-sub">Interactive Google Maps view with market status pins — Sprint 3</div>
+      </div></div>
+    </div>
+    <div id="page-bantay" class="page">
+      <div class="page-content" style="height:100%;"><div class="placeholder-page">
+        <div class="placeholder-icon">📋</div>
+        <div class="placeholder-title">Bantay Presyo</div>
+        <div class="placeholder-sub">Price monitoring form submissions and validations</div>
+      </div></div>
+    </div>
+    <div id="page-weekly" class="page">
+      <div class="page-content" style="height:100%;"><div class="placeholder-page">
+        <div class="placeholder-icon">📅</div>
+        <div class="placeholder-title">Weekly Reports</div>
+        <div class="placeholder-sub">Generated PDF reports — Sprint 7</div>
+      </div></div>
+    </div>
+    <div id="page-forms" class="page">
+      <div class="page-content" style="height:100%;"><div class="placeholder-page">
+        <div class="placeholder-icon">📝</div>
+        <div class="placeholder-title">Monitoring Forms</div>
+        <div class="placeholder-sub">Field data collection forms — Sprint 4</div>
+      </div></div>
+    </div>
+    <div id="page-profile" class="page">
+      <div class="page-content" style="height:100%;"><div class="placeholder-page">
+        <div class="placeholder-icon">👤</div>
+        <div class="placeholder-title">Profile</div>
+        <div class="placeholder-sub">User profile detail view and account settings</div>
+      </div></div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════════ MODALS -->
+
+<!-- ADD PERSONNEL MODAL -->
+<div class="modal-overlay" id="modal-add-personnel">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Personnel</div>
+      <button class="modal-close" onclick="closeModal('modal-add-personnel')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Last Name *</label>
+          <input class="form-input" type="text" placeholder="e.g. Santos" id="add-p-last">
+        </div>
+        <div class="form-group">
+          <label class="form-label">First Name *</label>
+          <input class="form-input" type="text" placeholder="e.g. Maria" id="add-p-first">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role *</label>
+          <select class="form-select" id="add-p-role" onchange="updateAssignmentDefault()">
+            <option value="">Select role…</option>
+            <option>IT Admin</option>
+            <option>Monitoring Admin</option>
+            <option>Monitoring Officer</option>
+            <option>Consolidation Officer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email *</label>
+          <input class="form-input" type="email" placeholder="email@sra.gov.ph" id="add-p-email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assignment</label>
+          <input class="form-input" type="text" id="add-p-assign" value="Unassigned">
+          <div class="form-hint">Auto-set to "Office" for admin roles</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select">
+            <option>Active</option>
+            <option>Inactive</option>
+          </select>
+        </div>
+        <div class="form-group full" style="background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px;">
+          <div style="font-size:11.5px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Auto-generated Credentials</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <div style="font-size:11px; color:var(--text3); margin-bottom:3px;">Username</div>
+              <div class="cred-box" id="gen-username">m.santos.001</div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--text3); margin-bottom:3px;">Default Password</div>
+              <div class="cred-box" id="gen-password">Sucrose@2025!</div>
+            </div>
+          </div>
+          <div class="form-hint" style="margin-top:6px;">⚠ Share credentials securely. User must change password on first login.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-personnel')">Cancel</button>
+      <button class="btn btn-primary" onclick="addPersonnel()">Create Personnel</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW PERSONNEL MODAL -->
+<div class="modal-overlay" id="modal-view-personnel">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Personnel Details</div>
+      <button class="modal-close" onclick="closeModal('modal-view-personnel')">✕</button>
+    </div>
+    <div class="modal-body" id="view-personnel-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-view-personnel')">Close</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-view-personnel'); openEditPersonnel()">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PERSONNEL MODAL -->
+<div class="modal-overlay" id="modal-edit-personnel">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Personnel</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-personnel')">✕</button>
+    </div>
+    <div class="modal-body" id="edit-personnel-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-personnel')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditPersonnel()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- PASSWORD RESET MODAL -->
+<div class="modal-overlay" id="modal-reset-password">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">Reset Password</div>
+      <button class="modal-close" onclick="closeModal('modal-reset-password')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px; color:var(--text2); margin-bottom:14px;" id="reset-pw-name">Reset default password for <strong>—</strong></div>
+      <div>
+        <div style="font-size:11px; color:var(--text3); margin-bottom:4px;">New Default Password</div>
+        <div class="cred-box">Sucrose@Reset1!</div>
+      </div>
+      <div class="form-hint" style="margin-top:8px;">⚠ This will override the current password. Share with the user securely. They must change it on next login.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-reset-password')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-reset-password'); showToast('Password reset successfully','success')">Confirm Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="modal-delete-confirm">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <div class="modal-title" id="del-title">Confirm Deletion</div>
+      <button class="modal-close" onclick="closeModal('modal-delete-confirm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-body">
+        <div class="confirm-icon" id="del-icon">🗑</div>
+        <div class="confirm-msg" id="del-msg">Are you sure you want to delete this record?</div>
+      </div>
+    </div>
+    <div class="modal-footer" id="del-footer"></div>
+  </div>
+</div>
+
+<!-- ADD MARKET MODAL -->
+<div class="modal-overlay" id="modal-add-market">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">Add New Market</div>
+      <button class="modal-close" onclick="closeModal('modal-add-market')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Market Name *</label>
+          <input class="form-input" type="text" placeholder="e.g. Pasig Public Market">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type *</label>
+          <select class="form-select">
+            <option value="">Select type…</option>
+            <option>Wet Market</option>
+            <option>Dry Market</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">City *</label>
+          <select class="form-select" id="add-m-city" onchange="updateMapPreview()">
+            <option value="">Select city…</option>
+            <option>Pasig City</option>
+            <option>Quezon City</option>
+            <option>Makati City</option>
+            <option>Marikina City</option>
+            <option>Manila City</option>
+            <option>Caloocan City</option>
+            <option>Taguig City</option>
+            <option>Mandaluyong City</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Full Address *</label>
+          <input class="form-input" type="text" id="add-m-addr" placeholder="e.g. Brgy. Kapitolyo, Pasig City, Metro Manila" oninput="updateMapPreview()">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Brands (connect multiple)</label>
+          <select class="form-select" onchange="addBrandPill(this)">
+            <option value="">Select brand to add…</option>
+            <option>Victorias</option>
+            <option>Crystal</option>
+            <option>Penshoppe</option>
+            <option>Anahaw</option>
+            <option>White Gold</option>
+            <option>Sweetseal</option>
+          </select>
+          <div class="multi-pills" id="m-brand-pills"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Latitude</label>
+          <input class="form-input" type="text" id="add-m-lat" placeholder="Auto-filled" disabled>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Longitude</label>
+          <input class="form-input" type="text" id="add-m-lng" placeholder="Auto-filled" disabled>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Location Preview</label>
+          <div class="map-placeholder" id="map-preview">
+            <div style="font-size:24px;">📍</div>
+            <div>Enter address to preview location</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select"><option>Active</option><option>Inactive</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-market')">Cancel</button>
+      <button class="btn btn-primary" onclick="addMarket()">Create Market</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MARKET MODAL -->
+<div class="modal-overlay" id="modal-view-market">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">Market Details</div>
+      <button class="modal-close" onclick="closeModal('modal-view-market')">✕</button>
+    </div>
+    <div class="modal-body" id="view-market-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-view-market')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BRAND MODAL -->
+<div class="modal-overlay" id="modal-add-brand">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">Add New Brand</div>
+      <button class="modal-close" onclick="closeModal('modal-add-brand')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Brand Name *</label>
+          <input class="form-input" type="text" placeholder="e.g. Victorias">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Available Sugar Types (select multiple)</label>
+          <select class="form-select" onchange="addSugarPill(this)">
+            <option value="">Add sugar type…</option>
+            <option>Raw</option>
+            <option>Washed</option>
+            <option>Refined</option>
+          </select>
+          <div class="multi-pills" id="b-sugar-pills"></div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Status</label>
+          <select class="form-select"><option>Active</option><option>Inactive</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-brand')">Cancel</button>
+      <button class="btn btn-primary" onclick="addBrand()">Create Brand</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW BRAND MODAL -->
+<div class="modal-overlay" id="modal-view-brand">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">Brand Details</div>
+      <button class="modal-close" onclick="closeModal('modal-view-brand')">✕</button>
+    </div>
+    <div class="modal-body" id="view-brand-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-view-brand')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ANOMALY DETAIL MODAL -->
+<div class="modal-overlay" id="modal-anomaly-detail">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">Market Anomaly Details</div>
+      <button class="modal-close" onclick="closeModal('modal-anomaly-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="anomaly-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-anomaly-detail')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════ DATA
+const personnelData = [
+  { id:1, last:'Reyes',    first:'Andrea',   role:'Monitoring Admin',      assign:'Office',        status:'Active',   email:'a.reyes@sra.gov.ph',    hasRecords: true  },
+  { id:2, last:'Santos',   first:'Miguel',   role:'Monitoring Officer',    assign:'Pasig City',    status:'Active',   email:'m.santos@sra.gov.ph',   hasRecords: true  },
+  { id:3, last:'Cruz',     first:'Lorena',   role:'Monitoring Officer',    assign:'Quezon City',   status:'Active',   email:'l.cruz@sra.gov.ph',     hasRecords: true  },
+  { id:4, last:'Lim',      first:'Carlos',   role:'Consolidation Officer', assign:'Office',        status:'Active',   email:'c.lim@sra.gov.ph',      hasRecords: false },
+  { id:5, last:'Garcia',   first:'Patricia', role:'IT Admin',              assign:'Office',        status:'Active',   email:'p.garcia@sra.gov.ph',   hasRecords: false },
+  { id:6, last:'Dela Cruz',first:'Jose',     role:'Monitoring Officer',    assign:'Makati City',   status:'Inactive', email:'j.delacruz@sra.gov.ph', hasRecords: true  },
+  { id:7, last:'Tan',      first:'Linda',    role:'Monitoring Officer',    assign:'Marikina City', status:'Active',   email:'l.tan@sra.gov.ph',      hasRecords: false },
+  { id:8, last:'Villanueva',first:'Ramon',   role:'Monitoring Officer',    assign:'Manila City',   status:'Active',   email:'r.villanueva@sra.gov.ph',hasRecords: true },
+  { id:9, last:'Morales',  first:'Grace',    role:'Monitoring Admin',      assign:'Office',        status:'Active',   email:'g.morales@sra.gov.ph',  hasRecords: false },
+  { id:10,last:'Bautista', first:'Rico',     role:'Consolidation Officer', assign:'Office',        status:'Inactive', email:'r.bautista@sra.gov.ph', hasRecords: true  },
+  { id:11,last:'Aquino',   first:'Clara',    role:'Monitoring Officer',    assign:'Unassigned',    status:'Active',   email:'c.aquino@sra.gov.ph',   hasRecords: false },
+  { id:12,last:'Mendoza',  first:'Dino',     role:'IT Admin',              assign:'Office',        status:'Active',   email:'d.mendoza@sra.gov.ph',  hasRecords: false },
+];
+
+const marketData = [
+  { id:1, name:'Pasig Public Market', type:'Wet Market', city:'Pasig City', address:'Brgy. Kapasigan, Pasig City, Metro Manila', status:'Active', brands:['Victorias','Crystal'], lat:'14.5764', lng:'121.0851', hasRecords:true },
+  { id:2, name:'SM Hypermarket Pasig', type:'Dry Market', city:'Pasig City', address:'Julia Vargas Ave, Ortigas Center, Pasig City', status:'Active', brands:['Anahaw','White Gold','Sweetseal'], lat:'14.5869', lng:'121.0601', hasRecords:true },
+  { id:3, name:'Quezon City Farmers Market', type:'Wet Market', city:'Quezon City', address:'Brgy. Central, Quezon City', status:'Active', brands:['Victorias','Anahaw'], lat:'14.6349', lng:'121.0437', hasRecords:false },
+  { id:4, name:'Robinsons Galleria', type:'Dry Market', city:'Quezon City', address:'EDSA corner Ortigas Ave, Quezon City', status:'Active', brands:['Crystal','White Gold'], lat:'14.5874', lng:'121.0562', hasRecords:true },
+  { id:5, name:'Marikina Public Market', type:'Wet Market', city:'Marikina City', address:'JP Rizal St, Marikina City', status:'Active', brands:['Victorias'], lat:'14.6507', lng:'121.0988', hasRecords:false },
+  { id:6, name:'Makati Central Market', type:'Wet Market', city:'Makati City', address:'Brgy. San Antonio, Makati City', status:'Inactive', brands:['Anahaw','Sweetseal'], lat:'14.5605', lng:'121.0221', hasRecords:true },
+  { id:7, name:'Landmark Makati', type:'Dry Market', city:'Makati City', address:'Ayala Ave, Makati City', status:'Active', brands:['Crystal','White Gold','Victorias'], lat:'14.5577', lng:'121.0153', hasRecords:true },
+  { id:8, name:'Manila Divisoria Market', type:'Wet Market', city:'Manila City', address:'Divisoria, Manila City', status:'Active', brands:['Anahaw'], lat:'14.5995', lng:'120.9690', hasRecords:false },
+  { id:9, name:'Puregold Manila', type:'Dry Market', city:'Manila City', address:'Espana Blvd, Manila City', status:'Active', brands:['Crystal','Sweetseal'], lat:'14.6120', lng:'120.9890', hasRecords:true },
+  { id:10,name:'Caloocan Public Market', type:'Wet Market', city:'Caloocan City', address:'9th Ave, Caloocan City', status:'Inactive', brands:['Victorias'], lat:'14.6497', lng:'120.9728', hasRecords:true },
+];
+
+const brandData = [
+  { id:1, name:'Victorias',  sugars:['Raw','Washed','Refined'], status:'Active', hasRecords:true  },
+  { id:2, name:'Crystal',    sugars:['Refined'],                status:'Active', hasRecords:true  },
+  { id:3, name:'Anahaw',     sugars:['Raw','Washed'],           status:'Active', hasRecords:false },
+  { id:4, name:'White Gold', sugars:['Refined'],                status:'Active', hasRecords:true  },
+  { id:5, name:'Sweetseal',  sugars:['Raw','Washed','Refined'], status:'Active', hasRecords:false },
+  { id:6, name:'Penshoppe',  sugars:['Washed'],                 status:'Inactive',hasRecords:true },
+  { id:7, name:'SRA Select', sugars:['Raw'],                    status:'Active', hasRecords:false },
+  { id:8, name:'Goldilocks', sugars:['Refined'],                status:'Inactive',hasRecords:false},
+];
+
+const anomalyData = [
+  { id:1, city:'Pasig City',    market:'Pasig Public Market',       priceAnomaly:5, marketAnomaly:2, window:'Apr 7–Jun 23, 2025' },
+  { id:2, city:'Pasig City',    market:'SM Hypermarket Pasig',      priceAnomaly:2, marketAnomaly:1, window:'Apr 7–Jun 23, 2025' },
+  { id:3, city:'Quezon City',   market:'Robinsons Galleria',        priceAnomaly:3, marketAnomaly:1, window:'Apr 7–Jun 23, 2025' },
+  { id:4, city:'Makati City',   market:'Landmark Makati',           priceAnomaly:4, marketAnomaly:2, window:'Apr 7–Jun 23, 2025' },
+  { id:5, city:'Manila City',   market:'Puregold Manila',           priceAnomaly:6, marketAnomaly:2, window:'Apr 7–Jun 23, 2025' },
+  { id:6, city:'Quezon City',   market:'QC Farmers Market',         priceAnomaly:1, marketAnomaly:0, window:'Apr 7–Jun 23, 2025' },
+  { id:7, city:'Makati City',   market:'Makati Central Market',     priceAnomaly:0, marketAnomaly:1, window:'Apr 7–Jun 23, 2025' },
+  { id:8, city:'Manila City',   market:'Divisoria Market',          priceAnomaly:2, marketAnomaly:1, window:'Apr 7–Jun 23, 2025' },
+];
+
+// ═══════════════════════════════════════ STATE
+let currentViewPersonnelId = null;
+let pPage = 1, mPage = 1, bPage = 1, aPage = 1;
+const PER_PAGE = 5;
+
+// ═══════════════════════════════════════ SIDEBAR
+let collapsed = false;
+function toggleSidebar() {
+  collapsed = !collapsed;
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed', collapsed);
+  document.getElementById('toggle-icon').textContent = collapsed ? '▶' : '◀';
+}
+
+// ═══════════════════════════════════════ PAGE NAV
+const pageConfig = {
+  personnel: { title:'Personnel Management', breadcrumb:'Management → Personnel' },
+  market:    { title:'Market Management',    breadcrumb:'Management → Market' },
+  brand:     { title:'Brand Management',     breadcrumb:'Management → Brand' },
+  anomaly:   { title:'Anomaly Flagging',     breadcrumb:'Management → Anomaly' },
+  dashboard: { title:'Dashboard',            breadcrumb:'Main → Dashboard' },
+  map:       { title:'City Map',             breadcrumb:'Main → City Map' },
+  bantay:    { title:'Bantay Presyo',        breadcrumb:'Reports → Bantay Presyo' },
+  weekly:    { title:'Weekly Reports',       breadcrumb:'Reports → Weekly Reports' },
+  forms:     { title:'Monitoring Forms',     breadcrumb:'Reports → Monitoring Forms' },
+  profile:   { title:'My Profile',           breadcrumb:'Profile' },
+};
+
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  const cfg = pageConfig[page] || {};
+  document.getElementById('topbar-title').textContent = cfg.title || page;
+  document.getElementById('topbar-breadcrumb').textContent = cfg.breadcrumb || '';
+}
+
+// ═══════════════════════════════════════ MODAL
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', function(e){ if(e.target === this) this.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════ TOAST
+let toastTimer;
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ═══════════════════════════════════════ UTILS
+function roleBadge(role) {
+  const map = { 'IT Admin':'badge-admin','Monitoring Admin':'badge-admin','Monitoring Officer':'badge-monitoring','Consolidation Officer':'badge-consolidation' };
+  return `<span class="badge ${map[role]||''}">${role}</span>`;
+}
+function statusBadge(s) {
+  return s==='Active' ? `<span class="badge badge-active">Active</span>` : `<span class="badge badge-inactive">Inactive</span>`;
+}
+function typeBadge(t) {
+  return t==='Wet Market' ? `<span class="badge badge-wet">Wet Market</span>` : `<span class="badge badge-dry">Dry Market</span>`;
+}
+function sugarBadges(arr) {
+  return arr.map(s=>`<span class="badge" style="background:var(--surface2);color:var(--text2);margin-right:3px;">${s}</span>`).join('');
+}
+function brandCount(brands) {
+  return `<span style="font-size:12px;color:var(--text3);">${brands.length} brand${brands.length!==1?'s':''}</span>`;
+}
+function renderPagination(containerId, total, currentPage, setPage) {
+  const pages = Math.ceil(total / PER_PAGE);
+  const c = document.getElementById(containerId);
+  let html = `<button class="page-btn" onclick="${setPage}(${currentPage-1})" ${currentPage<=1?'disabled style="opacity:.4;"':''}>Prev</button>`;
+  for(let i=1; i<=pages; i++) html += `<button class="page-btn${i===currentPage?' active':''}" onclick="${setPage}(${i})">${i}</button>`;
+  html += `<button class="page-btn" onclick="${setPage}(${currentPage+1})" ${currentPage>=pages?'disabled style="opacity:.4;"':''}>Next</button>`;
+  c.innerHTML = html;
+}
+
+// ═══════════════════════════════════════ PERSONNEL TABLE
+function getFilteredPersonnel() {
+  const q = (document.getElementById('p-search')||{}).value?.toLowerCase()||'';
+  const r = (document.getElementById('p-role')||{}).value||'';
+  const s = (document.getElementById('p-status')||{}).value||'';
+  return personnelData.filter(p => {
+    const name = (p.last+' '+p.first).toLowerCase();
+    return (!q || name.includes(q)) && (!r || p.role===r) && (!s || p.status===s);
+  });
+}
+function renderPersonnel() {
+  const data = getFilteredPersonnel();
+  const page = pPage;
+  const slice = data.slice((page-1)*PER_PAGE, page*PER_PAGE);
+  const tbody = document.getElementById('personnel-tbody');
+  if (slice.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:28px;">No records found</td></tr>`;
+  } else {
+    tbody.innerHTML = slice.map(p => `
+      <tr>
+        <td>${p.last}</td>
+        <td>${p.first}</td>
+        <td>${roleBadge(p.role)}</td>
+        <td style="color:var(--text2);">${p.assign}</td>
+        <td>${statusBadge(p.status)}</td>
+        <td>
+          <div class="actions-cell">
+            <button class="action-btn view" onclick="viewPersonnel(${p.id})">👁 View</button>
+            <button class="action-btn edit" onclick="editPersonnel(${p.id})">✏ Edit</button>
+            <button class="action-btn delete" onclick="deletePersonnel(${p.id})">🗑 Delete</button>
+            <button class="action-btn reset" onclick="resetPassword(${p.id})">🔑 Reset</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+  document.getElementById('p-count').textContent = `Showing ${Math.min(slice.length, PER_PAGE)} out of ${data.length} records`;
+  renderPagination('p-pagination', data.length, pPage, 'setPPage');
+}
+function filterPersonnel() { pPage=1; renderPersonnel(); }
+function setPPage(n) {
+  const total = Math.ceil(getFilteredPersonnel().length/PER_PAGE);
+  if(n<1||n>total) return;
+  pPage=n; renderPersonnel();
+}
+
+function viewPersonnel(id) {
+  const p = personnelData.find(x=>x.id===id);
+  currentViewPersonnelId = id;
+  document.getElementById('view-personnel-body').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Last Name</div><div class="detail-value">${p.last}</div></div>
+      <div class="detail-item"><div class="detail-label">First Name</div><div class="detail-value">${p.first}</div></div>
+      <div class="detail-item"><div class="detail-label">Role</div><div class="detail-value">${roleBadge(p.role)}</div></div>
+      <div class="detail-item"><div class="detail-label">Assignment</div><div class="detail-value">${p.assign}</div></div>
+      <div class="detail-item full"><div class="detail-label">Email</div><div class="detail-value">${p.email}</div></div>
+      <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">${statusBadge(p.status)}</div></div>
+      <div class="detail-item"><div class="detail-label">Has Monitoring Records</div><div class="detail-value">${p.hasRecords?'Yes':'No'}</div></div>
+    </div>`;
+  openModal('modal-view-personnel');
+}
+
+function openEditPersonnel() {
+  if (!currentViewPersonnelId) return;
+  editPersonnel(currentViewPersonnelId);
+}
+
+function editPersonnel(id) {
+  const p = personnelData.find(x=>x.id===id);
+  document.getElementById('edit-personnel-body').innerHTML = `
+    <div class="form-grid" data-id="${p.id}">
+      <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" value="${p.last}" id="ep-last"></div>
+      <div class="form-group"><label class="form-label">First Name</label><input class="form-input" value="${p.first}" id="ep-first"></div>
+      <div class="form-group"><label class="form-label">Role</label>
+        <select class="form-select" id="ep-role">
+          ${['IT Admin','Monitoring Admin','Monitoring Officer','Consolidation Officer'].map(r=>`<option${r===p.role?' selected':''}>${r}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Assignment</label><input class="form-input" value="${p.assign}" id="ep-assign"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" value="${p.email}" id="ep-email"></div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-select" id="ep-status">
+          <option${p.status==='Active'?' selected':''}>Active</option>
+          <option${p.status==='Inactive'?' selected':''}>Inactive</option>
+        </select>
+      </div>
+    </div>`;
+  document.querySelector('#edit-personnel-body .form-grid').dataset.id = p.id;
+  openModal('modal-edit-personnel');
+}
+function saveEditPersonnel() {
+  const id = parseInt(document.querySelector('#edit-personnel-body .form-grid').dataset.id);
+  const p = personnelData.find(x=>x.id===id);
+  p.last = document.getElementById('ep-last').value;
+  p.first = document.getElementById('ep-first').value;
+  p.role = document.getElementById('ep-role').value;
+  p.assign = document.getElementById('ep-assign').value;
+  p.email = document.getElementById('ep-email').value;
+  p.status = document.getElementById('ep-status').value;
+  closeModal('modal-edit-personnel');
+  renderPersonnel();
+  showToast('Personnel record updated','success');
+}
+
+function deletePersonnel(id) {
+  const p = personnelData.find(x=>x.id===id);
+  const del = document.getElementById('modal-delete-confirm');
+  document.getElementById('del-title').textContent = 'Delete Personnel';
+  if (p.hasRecords) {
+    document.getElementById('del-icon').textContent = '⚠️';
+    document.getElementById('del-msg').innerHTML = `<strong>${p.first} ${p.last}</strong> has existing monitoring records and cannot be deleted.<br><br>Would you like to set their status to <strong>Inactive</strong> instead?`;
+    document.getElementById('del-footer').innerHTML = `
+      <button class="btn btn-ghost" onclick="closeModal('modal-delete-confirm')">Cancel</button>
+      <button class="btn btn-primary" onclick="setInactive(${id})">Set Inactive</button>`;
+  } else {
+    document.getElementById('del-icon').textContent = '🗑';
+    document.getElementById('del-msg').innerHTML = `Are you sure you want to delete <strong>${p.first} ${p.last}</strong>? This action cannot be undone.`;
+    document.getElementById('del-footer').innerHTML = `
+      <button class="btn btn-ghost" onclick="closeModal('modal-delete-confirm')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete('personnel',${id})">Delete</button>`;
+  }
+  openModal('modal-delete-confirm');
+}
+function setInactive(id) {
+  const p = personnelData.find(x=>x.id===id);
+  p.status = 'Inactive';
+  closeModal('modal-delete-confirm');
+  renderPersonnel();
+  showToast('Status set to Inactive','warn');
+}
+function confirmDelete(type, id) {
+  if (type==='personnel') {
+    const idx = personnelData.findIndex(x=>x.id===id);
+    if(idx>-1) personnelData.splice(idx,1);
+    closeModal('modal-delete-confirm'); renderPersonnel();
+  } else if (type==='market') {
+    const idx = marketData.findIndex(x=>x.id===id);
+    if(idx>-1) marketData.splice(idx,1);
+    closeModal('modal-delete-confirm'); renderMarket();
+  } else if (type==='brand') {
+    const idx = brandData.findIndex(x=>x.id===id);
+    if(idx>-1) brandData.splice(idx,1);
+    closeModal('modal-delete-confirm'); renderBrand();
+  }
+  showToast('Record deleted','success');
+}
+
+function resetPassword(id) {
+  const p = personnelData.find(x=>x.id===id);
+  document.getElementById('reset-pw-name').innerHTML = `Reset default password for <strong>${p.first} ${p.last}</strong>`;
+  openModal('modal-reset-password');
+}
+
+function addPersonnel() {
+  const last = document.getElementById('add-p-last').value.trim();
+  const first = document.getElementById('add-p-first').value.trim();
+  const role = document.getElementById('add-p-role').value;
+  if (!last || !first || !role) { showToast('Please fill in required fields','error'); return; }
+  personnelData.push({ id: Date.now(), last, first, role, assign: document.getElementById('add-p-assign').value, status:'Active', email: document.getElementById('add-p-email').value, hasRecords: false });
+  closeModal('modal-add-personnel');
+  document.getElementById('add-p-last').value='';
+  document.getElementById('add-p-first').value='';
+  document.getElementById('add-p-role').value='';
+  document.getElementById('add-p-email').value='';
+  renderPersonnel();
+  showToast('Personnel record created','success');
+}
+
+function updateAssignmentDefault() {
+  const role = document.getElementById('add-p-role').value;
+  const assign = document.getElementById('add-p-assign');
+  if (role==='IT Admin'||role==='Monitoring Admin'||role==='Consolidation Officer') assign.value='Office';
+  else assign.value='Unassigned';
+}
+
+// ═══════════════════════════════════════ MARKET TABLE
+function getFilteredMarket() {
+  const q = document.getElementById('m-search')?.value?.toLowerCase()||'';
+  const t = document.getElementById('m-type')?.value||'';
+  const c = document.getElementById('m-city')?.value||'';
+  const s = document.getElementById('m-status')?.value||'';
+  return marketData.filter(m =>
+    (!q || m.name.toLowerCase().includes(q)) &&
+    (!t || m.type===t) && (!c || m.city===c) && (!s || m.status===s)
+  );
+}
+function renderMarket() {
+  const data = getFilteredMarket();
+  const slice = data.slice((mPage-1)*PER_PAGE, mPage*PER_PAGE);
+  const tbody = document.getElementById('market-tbody');
+  tbody.innerHTML = slice.length ? slice.map(m=>`
+    <tr>
+      <td><strong>${m.name}</strong></td>
+      <td>${typeBadge(m.type)}</td>
+      <td style="color:var(--text2);">${m.city}</td>
+      <td style="color:var(--text3);font-size:12px;max-width:200px;">${m.address}</td>
+      <td>${brandCount(m.brands)}</td>
+      <td>${statusBadge(m.status)}</td>
+      <td><div class="actions-cell">
+        <button class="action-btn view" onclick="viewMarket(${m.id})">👁 View</button>
+        <button class="action-btn edit" onclick="showToast('Edit Market — interaction demo','warn')">✏ Edit</button>
+        <button class="action-btn delete" onclick="deleteMarket(${m.id})">🗑 Delete</button>
+      </div></td>
+    </tr>`).join('') :
+    `<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:28px;">No records found</td></tr>`;
+  document.getElementById('m-count').textContent=`Showing ${Math.min(slice.length,PER_PAGE)} out of ${data.length} records`;
+  renderPagination('m-pagination', data.length, mPage, 'setMPage');
+}
+function filterMarket(){ mPage=1; renderMarket(); }
+function setMPage(n){ const t=Math.ceil(getFilteredMarket().length/PER_PAGE); if(n<1||n>t)return; mPage=n; renderMarket(); }
+function viewMarket(id) {
+  const m = marketData.find(x=>x.id===id);
+  document.getElementById('view-market-body').innerHTML = `
+    <div class="detail-grid" style="margin-bottom:14px;">
+      <div class="detail-item full"><div class="detail-label">Market Name</div><div class="detail-value" style="font-size:15px;font-weight:600;">${m.name}</div></div>
+      <div class="detail-item"><div class="detail-label">Type</div><div class="detail-value">${typeBadge(m.type)}</div></div>
+      <div class="detail-item"><div class="detail-label">City</div><div class="detail-value">${m.city}</div></div>
+      <div class="detail-item full"><div class="detail-label">Address</div><div class="detail-value">${m.address}</div></div>
+      <div class="detail-item"><div class="detail-label">Latitude</div><div class="detail-value" style="font-family:'DM Mono',monospace;font-size:12.5px;">${m.lat}</div></div>
+      <div class="detail-item"><div class="detail-label">Longitude</div><div class="detail-value" style="font-family:'DM Mono',monospace;font-size:12.5px;">${m.lng}</div></div>
+      <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">${statusBadge(m.status)}</div></div>
+      <div class="detail-item"><div class="detail-label">Has Monitoring Records</div><div class="detail-value">${m.hasRecords?'Yes':'No'}</div></div>
+    </div>
+    <div class="detail-label" style="margin-bottom:6px;">Connected Brands</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;">${m.brands.map(b=>`<span class="badge" style="background:var(--accent-light);color:var(--accent);">${b}</span>`).join('')}</div>
+    <div class="map-placeholder">
+      <div style="font-size:24px;">📍</div>
+      <div>${m.name}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);">${m.lat}, ${m.lng}</div>
+    </div>`;
+  openModal('modal-view-market');
+}
+function deleteMarket(id) {
+  const m = marketData.find(x=>x.id===id);
+  document.getElementById('del-title').textContent='Delete Market';
+  if(m.hasRecords){
+    document.getElementById('del-icon').textContent='⚠️';
+    document.getElementById('del-msg').innerHTML=`<strong>${m.name}</strong> has monitoring records and cannot be deleted.<br><br>Set status to <strong>Inactive</strong> instead?`;
+    document.getElementById('del-footer').innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-delete-confirm')">Cancel</button><button class="btn btn-primary" onclick="setMarketInactive(${id})">Set Inactive</button>`;
+  } else {
+    document.getElementById('del-icon').textContent='🗑';
+    document.getElementById('del-msg').innerHTML=`Delete <strong>${m.name}</strong>? This cannot be undone.`;
+    document.getElementById('del-footer').innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-delete-confirm')">Cancel</button><button class="btn btn-danger" onclick="confirmDelete('market',${id})">Delete</button>`;
+  }
+  openModal('modal-delete-confirm');
+}
+function setMarketInactive(id){ const m=marketData.find(x=>x.id===id); m.status='Inactive'; closeModal('modal-delete-confirm'); renderMarket(); showToast('Market set to Inactive','warn'); }
+function addMarket(){
+  closeModal('modal-add-market');
+  marketData.push({id:Date.now(),name:'New Market',type:'Wet Market',city:'Pasig City',address:'New Address',status:'Active',brands:[],lat:'14.5764',lng:'121.0851',hasRecords:false});
+  renderMarket(); showToast('Market record created','success');
+}
+
+// ═══════════════════════════════════════ MAP PREVIEW SIMULATION
+let mapTimer;
+function updateMapPreview() {
+  const addr = document.getElementById('add-m-addr')?.value||'';
+  const city = document.getElementById('add-m-city')?.value||'';
+  const prev = document.getElementById('map-preview');
+  if (!prev) return;
+  if (addr.length > 8 || city) {
+    clearTimeout(mapTimer);
+    prev.innerHTML=`<div style="font-size:13px;color:var(--text3);">Geocoding…</div>`;
+    mapTimer = setTimeout(()=>{
+      const coords = {'Pasig City':['14.5764','121.0851'],'Quezon City':['14.6349','121.0437'],'Makati City':['14.5605','121.0221'],'Marikina City':['14.6507','121.0988'],'Manila City':['14.5995','120.9690']};
+      const c = coords[city]||['14.5995','120.9690'];
+      document.getElementById('add-m-lat').value = c[0];
+      document.getElementById('add-m-lng').value = c[1];
+      prev.innerHTML=`<div style="font-size:20px;">📍</div><div style="font-size:12px;">${addr||city}</div><div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);">${c[0]}, ${c[1]}</div>`;
+    }, 800);
+  }
+}
+
+// ═══════════════════════════════════════ BRAND TABLE
+function getFilteredBrand(){
+  const q=document.getElementById('b-search')?.value?.toLowerCase()||'';
+  const s=document.getElementById('b-sugar')?.value||'';
+  const st=document.getElementById('b-status')?.value||'';
+  return brandData.filter(b=>(!q||b.name.toLowerCase().includes(q))&&(!s||b.sugars.includes(s))&&(!st||b.status===st));
+}
+function renderBrand(){
+  const data=getFilteredBrand();
+  const slice=data.slice((bPage-1)*PER_PAGE,bPage*PER_PAGE);
+  const tbody=document.getElementById('brand-tbody');
+  tbody.innerHTML=slice.length?slice.map(b=>`
+    <tr>
+      <td><strong>${b.name}</strong></td>
+      <td>${sugarBadges(b.sugars)}</td>
+      <td>${statusBadge(b.status)}</td>
+      <td><div class="actions-cell">
+        <button class="action-btn view" onclick="viewBrand(${b.id})">👁 View</button>
+        <button class="action-btn edit" onclick="showToast('Edit Brand — interaction demo','warn')">✏ Edit</button>
+        <button class="action-btn delete" onclick="deleteBrand(${b.id})">🗑 Delete</button>
+      </div></td>
+    </tr>`).join(''):
+    `<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:28px;">No records found</td></tr>`;
+  document.getElementById('b-count').textContent=`Showing ${Math.min(slice.length,PER_PAGE)} out of ${data.length} records`;
+  renderPagination('b-pagination',data.length,bPage,'setBPage');
+}
+function filterBrand(){bPage=1;renderBrand();}
+function setBPage(n){const t=Math.ceil(getFilteredBrand().length/PER_PAGE);if(n<1||n>t)return;bPage=n;renderBrand();}
+function viewBrand(id){
+  const b=brandData.find(x=>x.id===id);
+  document.getElementById('view-brand-body').innerHTML=`
+    <div class="detail-grid">
+      <div class="detail-item full"><div class="detail-label">Brand Name</div><div class="detail-value" style="font-size:15px;font-weight:600;">${b.name}</div></div>
+      <div class="detail-item full"><div class="detail-label">Sugar Types Available</div><div class="detail-value" style="margin-top:4px;">${sugarBadges(b.sugars)}</div></div>
+      <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">${statusBadge(b.status)}</div></div>
+      <div class="detail-item"><div class="detail-label">Has Monitoring Records</div><div class="detail-value">${b.hasRecords?'Yes':'No'}</div></div>
+    </div>`;
+  openModal('modal-view-brand');
+}
+function deleteBrand(id){
+  const b=brandData.find(x=>x.id===id);
+  document.getElementById('del-title').textContent='Delete Brand';
+  if(b.hasRecords){
+    document.getElementById('del-icon').textContent='⚠️';
+    document.getElementById('del-msg').innerHTML=`<strong>${b.name}</strong> has monitoring records and cannot be deleted.<br><br>Set status to <strong>Inactive</strong> instead?`;
+    document.getElementById('del-footer').innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-delete-confirm')">Cancel</button><button class="btn btn-primary" onclick="setBrandInactive(${id})">Set Inactive</button>`;
+  } else {
+    document.getElementById('del-icon').textContent='🗑';
+    document.getElementById('del-msg').innerHTML=`Delete <strong>${b.name}</strong>? This cannot be undone.`;
+    document.getElementById('del-footer').innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-delete-confirm')">Cancel</button><button class="btn btn-danger" onclick="confirmDelete('brand',${id})">Delete</button>`;
+  }
+  openModal('modal-delete-confirm');
+}
+function setBrandInactive(id){const b=brandData.find(x=>x.id===id);b.status='Inactive';closeModal('modal-delete-confirm');renderBrand();showToast('Brand set to Inactive','warn');}
+function addBrand(){
+  closeModal('modal-add-brand');
+  brandData.push({id:Date.now(),name:'New Brand',sugars:['Refined'],status:'Active',hasRecords:false});
+  renderBrand(); showToast('Brand record created','success');
+}
+
+// ═══════════════════════════════════════ MULTI-SELECT PILLS
+const brandPillsAdded = new Set();
+function addBrandPill(sel){
+  const v=sel.value; if(!v)return; if(brandPillsAdded.has(v)){sel.value='';return;}
+  brandPillsAdded.add(v);
+  const c=document.getElementById('m-brand-pills');
+  const pill=document.createElement('div'); pill.className='pill'; pill.dataset.val=v;
+  pill.innerHTML=`${v}<span class="pill-rm" onclick="removeBrandPill('${v}')">×</span>`;
+  c.appendChild(pill); sel.value='';
+}
+function removeBrandPill(v){ brandPillsAdded.delete(v); document.querySelector(`#m-brand-pills .pill[data-val="${v}"]`)?.remove(); }
+
+const sugarPillsAdded = new Set();
+function addSugarPill(sel){
+  const v=sel.value; if(!v)return; if(sugarPillsAdded.has(v)){sel.value='';return;}
+  sugarPillsAdded.add(v);
+  const c=document.getElementById('b-sugar-pills');
+  const pill=document.createElement('div'); pill.className='pill'; pill.dataset.val=v;
+  pill.innerHTML=`${v}<span class="pill-rm" onclick="removeSugarPill('${v}')">×</span>`;
+  c.appendChild(pill); sel.value='';
+}
+function removeSugarPill(v){ sugarPillsAdded.delete(v); document.querySelector(`#b-sugar-pills .pill[data-val="${v}"]`)?.remove(); }
+
+// ═══════════════════════════════════════ ANOMALY TABLE
+function getFilteredAnomaly(){
+  const q=document.getElementById('a-search')?.value?.toLowerCase()||'';
+  const c=document.getElementById('a-city')?.value||'';
+  return anomalyData.filter(a=>(!q||(a.city+' '+a.market).toLowerCase().includes(q))&&(!c||a.city===c));
+}
+function renderAnomaly(){
+  const data=getFilteredAnomaly();
+  const slice=data.slice((aPage-1)*PER_PAGE,aPage*PER_PAGE);
+  const tbody=document.getElementById('anomaly-tbody');
+  tbody.innerHTML=slice.length?slice.map(a=>`
+    <tr>
+      <td style="color:var(--text2);">${a.city}</td>
+      <td><strong>${a.market}</strong></td>
+      <td><span style="font-size:13px;font-weight:600;color:${a.priceAnomaly>3?'var(--danger)':a.priceAnomaly>0?'var(--warn)':'var(--text3)'};">${a.priceAnomaly}</span></td>
+      <td><span style="font-size:13px;font-weight:600;color:${a.marketAnomaly>1?'var(--danger)':a.marketAnomaly>0?'var(--warn)':'var(--text3)'};">${a.marketAnomaly}</span></td>
+      <td><button class="action-btn view" onclick="viewAnomaly(${a.id})">📊 View Details</button></td>
+    </tr>`).join(''):
+    `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px;">No records found</td></tr>`;
+  document.getElementById('a-count').textContent=`Showing ${Math.min(slice.length,PER_PAGE)} out of ${data.length} records`;
+  renderPagination('a-pagination',data.length,aPage,'setAPage');
+}
+function filterAnomaly(){aPage=1;renderAnomaly();}
+function setAPage(n){const t=Math.ceil(getFilteredAnomaly().length/PER_PAGE);if(n<1||n>t)return;aPage=n;renderAnomaly();}
+
+const brandAnomalyDetails = {
+  'Victorias': { mean:'₱56.40', sd:'₱2.10', iqr:'₱2.80', innerLow:'₱49.20', innerHigh:'₱63.60', outerLow:'₱44.00', outerHigh:'₱68.80', vol:0.72 },
+  'Crystal':   { mean:'₱68.80', sd:'₱1.50', iqr:'₱1.90', innerLow:'₱64.00', innerHigh:'₱73.60', outerLow:'₱60.00', outerHigh:'₱77.60', vol:0.38 },
+  'Anahaw':    { mean:'₱55.10', sd:'₱3.20', iqr:'₱4.10', innerLow:'₱47.00', innerHigh:'₱63.20', outerLow:'₱40.80', outerHigh:'₱69.40', vol:0.85 },
+};
+function volClass(v){ return v>0.7?'vol-high':v>0.4?'vol-med':'vol-low'; }
+
+function viewAnomaly(id){
+  const a=anomalyData.find(x=>x.id===id);
+  const m=marketData.find(x=>x.name===a.market)||{brands:['Victorias','Crystal']};
+  const brands=m.brands.filter(b=>brandAnomalyDetails[b]);
+  let brandRows=brands.map(b=>{
+    const d=brandAnomalyDetails[b];
+    return `<tr>
+      <td><strong>${b}</strong></td>
+      <td>${d.mean}</td><td>${d.sd}</td><td>${d.iqr}</td>
+      <td style="font-size:11px;">${d.innerLow} / ${d.innerHigh}</td>
+      <td style="font-size:11px;">${d.outerLow} / ${d.outerHigh}</td>
+      <td>
+        <div class="vol-bar-wrap">
+          <div class="vol-bar"><div class="vol-fill ${volClass(d.vol)}" style="width:${d.vol*100}%"></div></div>
+          <span style="font-size:11.5px;color:var(--text2);min-width:28px;">${d.vol.toFixed(2)}</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:16px;">No brand data in rolling window</td></tr>`;
+
+  document.getElementById('anomaly-detail-body').innerHTML=`
+    <div style="margin-bottom:12px;">
+      <div style="font-size:15px;font-weight:600;">${a.market}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px;">${a.city} · Rolling window: ${a.window}</div>
+    </div>
+    <div class="anomaly-detail-grid">
+      <div class="anomaly-stat-card"><div class="anomaly-stat-label">Price Anomalies</div><div class="anomaly-stat-val" style="color:${a.priceAnomaly>3?'var(--danger)':'var(--text)'};">${a.priceAnomaly}</div></div>
+      <div class="anomaly-stat-card"><div class="anomaly-stat-label">Market Anomalies</div><div class="anomaly-stat-val" style="color:${a.marketAnomaly>1?'var(--danger)':'var(--text)'};">${a.marketAnomaly}</div></div>
+      <div class="anomaly-stat-card"><div class="anomaly-stat-label">Brands Monitored</div><div class="anomaly-stat-val">${m.brands.length}</div></div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="anomaly-brand-table">
+        <thead><tr>
+          <th>Brand</th><th>Mean</th><th>Std Dev</th><th>IQR</th>
+          <th>Inner Fence (↓/↑)</th><th>Outer Fence (↓/↑)</th><th>Volatility Score</th>
+        </tr></thead>
+        <tbody>${brandRows}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Market Volatility Score</div>
+      <div class="vol-bar-wrap">
+        <div class="vol-bar" style="height:8px;"><div class="vol-fill vol-high" style="width:68%;height:8px;"></div></div>
+        <span style="font-size:13px;font-weight:600;color:var(--text);">0.68</span>
+        <span class="flag-badge flag-above" style="margin-left:4px;">HIGH</span>
+      </div>
+    </div>`;
+  openModal('modal-anomaly-detail');
+}
+
+// ═══════════════════════════════════════ SRP TOGGLE
+let srpOn = true;
+function toggleSRP(){
+  srpOn=!srpOn;
+  document.getElementById('srp-toggle').classList.toggle('on',srpOn);
+  document.getElementById('srp-inputs').style.opacity=srpOn?'1':'0.4';
+  document.getElementById('srp-inputs').style.pointerEvents=srpOn?'all':'none';
+  showToast('SRP Flagging '+(srpOn?'enabled':'disabled'), srpOn?'success':'warn');
+}
+
+// ═══════════════════════════════════════ INIT
+renderPersonnel();
+renderMarket();
+renderBrand();
+renderAnomaly();
+</script>
+</body>
+</html>
